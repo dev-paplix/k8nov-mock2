@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  labels:
+    app: limit
+  name: limit
+  namespace: qq3
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: limit
+  template:
+    metadata:
+      labels:
+        app: limit
+    spec:
+      containers:
+      - image: redis
+        imagePullPolicy: Always
+        name: redis
