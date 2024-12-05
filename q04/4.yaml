@@ -1,0 +1,48 @@
+kubectl create configmap q5
+kubectl create secret generic credentials
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: credentials
+stringData:
+  username: "test" 
+  password: dGVzdA==
+
+--- 
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: q5
+data:
+  api-url: "http://api.example.com/json"
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apache
+spec:
+  containers:
+    - name: apache
+      image: apache:latest
+      env:
+        - name: API_LING
+          valueFrom:
+            configMapKeyRef:
+              name: q5
+              key: api-url
+        - name: USERNAME
+          valueFrom: 
+            secretKeyRef: 
+              name: credentials
+              key: username      
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: password
