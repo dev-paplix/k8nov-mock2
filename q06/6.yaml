@@ -35,7 +35,7 @@ metadata:
   namespace: ca1
 spec:
   selector:
-    app: nginx
+    app: web
   ports:
     - protocol: TCP
       port: 8080
