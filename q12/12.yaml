@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysqlconfig
+  namespace: datastorage
+data:
+  MYSQL_DATABASE: "db"
+  MYSQL_USER: "user"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysqlsecret
+  namespace: datastorage
+type: Opaque
+data:
+  MYSQL_ROOT_PASSWORD: "password"
+  MYSQL_PASSWORD: "password"
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: mysql
+  name: mysql
+  namespace: datastorage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - image: mysql:oraclelinux9
+          name: mysql
+          env:
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: mysqlconfig
+                  key: MYSQL_DATABASE
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mysqlconfig
+                  key: MYSQL_USER
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysqlsecret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysqlsecret
+                  key: MYSQL_PASSWORD
+          volumeMounts:
+            - name: mysql-volume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-volume
+          persistentVolumeClaim:
+            claimName: statepvc
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: state
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: false
+reclaimPolicy: Delete
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: statepv
+spec:
+  capacity:
+    storage: 3Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: state
+  hostPath:
+    path: /data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: statepvc
+  namespace: datastorage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: state
