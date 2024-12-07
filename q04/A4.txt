@@ -1,0 +1,107 @@
+controlplane $ k apply -f configmap-q5.yaml 
+configmap/q5 configured
+controlplane $ nano apache-pod.yaml
+controlplane $ k apply -f apache-pod.yaml 
+pod/apache created
+controlplane $ k get configmap q5 -n default
+NAME   DATA   AGE
+q5     1      10m
+controlplane $ k describe configmap q5 -n default
+Name:         q5
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+API_LINK:
+----
+https://api.configmap.com/receive-json
+
+
+BinaryData
+====
+
+Events:  <none>
+controlplane $ k get secret credentials -n default
+NAME          TYPE     DATA   AGE
+credentials   Opaque   2      10m
+controlplane $ k describe secret credentials -n default
+Name:         credentials
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  Opaque
+
+Data
+====
+password:  8 bytes
+username:  8 bytes
+controlplane $ k get pods -n default
+NAME     READY   STATUS    RESTARTS   AGE
+apache   1/1     Running   0          61s
+controlplane $ k describe pods -n default
+Name:             apache
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             node01/172.30.2.2
+Start Time:       Thu, 05 Dec 2024 13:37:42 +0000
+Labels:           <none>
+Annotations:      cni.projectcalico.org/containerID: 240701a130dd027b51f51e07e59180418d6584c3fb21575f85e1c15d40ea71df
+                  cni.projectcalico.org/podIP: 192.168.1.14/32
+                  cni.projectcalico.org/podIPs: 192.168.1.14/32
+Status:           Running
+IP:               192.168.1.14
+IPs:
+  IP:  192.168.1.14
+Containers:
+  apache-container:
+    Container ID:   containerd://56ac008b8addad86543e3031e2c7f4ece2405d83beba4ef300541f74048b8c7d
+    Image:          httpd:latest
+    Image ID:       docker.io/library/httpd@sha256:f4c5139eda466e45814122d9bd8b886d8ef6877296126c09b76dbad72b03c336
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Thu, 05 Dec 2024 13:37:50 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      API_LINK:  <set to the key 'API_LINK' of config map 'q5'>       Optional: false
+      USERNAME:  <set to the key 'username' in secret 'credentials'>  Optional: false
+      PASSWORD:  <set to the key 'password' in secret 'credentials'>  Optional: false
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-grnvm (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-grnvm:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  69s   default-scheduler  Successfully assigned default/apache to node01
+  Normal  Pulling    69s   kubelet            Pulling image "httpd:latest"
+  Normal  Pulled     61s   kubelet            Successfully pulled image "httpd:latest" in 7.349s (7.349s including waiting). Image size: 58302131 bytes.
+  Normal  Created    61s   kubelet            Created container apache-container
+  Normal  Started    61s   kubelet            Started container apache-container
+controlplane $ k exec apache -n default --printenv | grep -E "API_LINK|USERNAME|PASSWD"
+error: unknown flag: --printenv
+See 'kubectl exec --help' for usage.
+controlplane $ k exec apache -n default -- printenv | grep -E "API_LINK|USERNAME|PASSWD"
+API_LINK=https://api.configmap.com/receive-json
+USERNAME=username
