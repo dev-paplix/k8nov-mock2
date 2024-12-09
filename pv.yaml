@@ -1,0 +1,13 @@
+kind: PersistentVolume
+metadata:
+  name: state-pv
+spec:
+  capacity:
+    storage: 3Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: state
+  hostPath:
+    path: /mnt/data
