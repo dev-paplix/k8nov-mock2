@@ -1,1 +1,69 @@
-
+<<<<<<< HEAD
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: app
+  name: app
+  namespace: fullstack
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+  - image: maven:3.9.9-eclipse-temurin-11
+    name: java
+    command: ["mvn"]
+    args: ["clean", "install"]
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+=======
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fullstack
+  labels:
+    app: fullstack
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maven-deployment
+  namespace: fullstack
+  labels:
+    app: maven
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maven
+  template:
+    metadata:
+      labels:
+        app: maven
+    spec:
+      containers:
+      - name: maven
+        image: maven:3.9.9-eclipse-temurin-11
+        ports:
+        - containerPort: 8080
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maven-svc
+  namespace: fullstack
+spec:
+  selector:
+    app: maven
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+>>>>>>> cae2860 (maven-mysql manifest)

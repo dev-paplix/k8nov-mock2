@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: web-statefulset
+  name: web-statefulset
+  namespace: storage-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-statefulset
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: web-statefulset
+    spec:
+      containers:
+        - image: nginx:alpine
+          name: nginx
+          volumeMounts:
+            - name: nginx-volume
+              mountPath: /data
+      volumes:
+        - name: nginx-volume
+          persistentVolumeClaim:
+            claimName: web-pvc
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-storage
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: false
+reclaimPolicy: Delete
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: fast-storage-pv
+spec:
+  capacity:
+    storage: 3Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: fast-storage
+  hostPath:
+    path: /data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: web-pvc
+  namespace: storage-test
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: fast-storage
