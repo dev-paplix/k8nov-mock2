@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: datastorage
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  serviceName: "mysql"
+  replicas: 3
+  minReadySeconds: 10
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:oraclelinux9
+        volumeMounts:
+         - mountPath: /var/lib/mysql/
+           name: mysql-data
+           readOnly: true
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: MYSQL_ROOT_PASSWORD
+                key: MYSQL_ROOT_PASSWORD
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: MYSQL_PASSWORD
+                key: MYSQL_PASSWORD
+          - name: MYSQL_USER
+            valueFrom:
+              configMapKeyRef:
+                name: MYSQL_USER
+                key: MYSQL_USER
+          - name: MYSQL_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: MYSQL_DATABASE
+                key: MYSQL_DATABASE
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /etc/mysql/
+        ports:
+        - containerPort: 3306
+          name: mysql
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: state-pvc
