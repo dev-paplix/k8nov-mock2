@@ -1,4 +1,23 @@
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: state-pv
+spec:
+  capacity:
+    storage: 3Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: state
+  hostPath:
+    path: /mnt/data
+	
+	
+	
+	
+controlplane $ cat mysql-state.yaml 
+apiVersion: v1
 kind: Service
 metadata:
   name: mysql-svc
@@ -38,26 +57,23 @@ spec:
           - name: MYSQL_ROOT_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: MYSQL_ROOT_PASSWORD
+                name: mysqlsecret
                 key: MYSQL_ROOT_PASSWORD
           - name: MYSQL_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: MYSQL_PASSWORD
+                name: mysqlsecret
                 key: MYSQL_PASSWORD
           - name: MYSQL_USER
             valueFrom:
               configMapKeyRef:
-                name: MYSQL_USER
+                name: mysqlconfig
                 key: MYSQL_USER
           - name: MYSQL_DATABASE
             valueFrom:
               configMapKeyRef:
-                name: MYSQL_DATABASE
+                name: mysqlconfig
                 key: MYSQL_DATABASE
-        volumeMounts:
-        - name: mysql-data
-          mountPath: /etc/mysql/
         ports:
         - containerPort: 3306
           name: mysql
