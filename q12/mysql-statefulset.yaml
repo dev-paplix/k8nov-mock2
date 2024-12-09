@@ -1,23 +1,4 @@
 apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: state-pv
-spec:
-  capacity:
-    storage: 3Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
-  storageClassName: state
-  hostPath:
-    path: /mnt/data
-	
-	
-	
-	
-controlplane $ cat mysql-state.yaml 
-apiVersion: v1
 kind: Service
 metadata:
   name: mysql-svc
